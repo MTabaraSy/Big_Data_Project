@@ -8,7 +8,7 @@ import java.util.Properties
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 object Consumer extends App {
-  val topic = "Topic1"
+  val topic = "testScala"
 
   val consumerProperties = new Properties()
   consumerProperties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092")
@@ -18,12 +18,12 @@ object Consumer extends App {
   consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer].getName)
   consumerProperties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false")
 
-  val kafkaConsumer = new KafkaConsumer[String,String](consumerProperties)
+  val kafkaConsumer = new KafkaConsumer[String,Iterator[String]](consumerProperties)
   kafkaConsumer.subscribe(List(topic).asJava)
 
   println("key |Message |Partition |Offset")
   while (true){
-    val polledRecords : ConsumerRecords[String,String] = kafkaConsumer.poll(Duration.ofMillis(100))
+    val polledRecords : ConsumerRecords[String,Iterator[String]] = kafkaConsumer.poll(Duration.ofMillis(100))
     if(!polledRecords.isEmpty){
       println(s"polled ${polledRecords.count()} records")
       val recordIterator = polledRecords.iterator()
