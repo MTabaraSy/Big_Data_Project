@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, Produce
 import org.apache.kafka.common.serialization.StringSerializer
 import org.apache.spark
 import org.apache.spark.sql.SparkSession
+
 import org.apache.spark.sql.catalyst.dsl.expressions.{DslExpression, StringToAttributeConversionHelper}
 
 import java.io.File
@@ -13,40 +14,33 @@ import scala.io.Source
 
 object Producer extends App {
 
-   val spark = SparkSession
-     .builder()
-     .master("local")
-     .appName("Load_Data").getOrCreate()
-
-   val DFpays = spark.read.option("hearder",true).option("inferSchema",true).format("csv").load("C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\pays.csv")
-
-   //Ecriture pour le fichier Pays
+   //InTopic pour le fichier Pays
    val pays = "C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\pays.csv"
    val filePays = new File(pays)
    val linesPays: Iterator[String] = Source.fromFile(filePays).getLines()
    //linesPays.foreach(println)
    val DataPays = linesPays.mkString(",")
 
-   //Ecriture pour le fichier Tours
-   val tours = "C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\cartographie.csv"
+   //InTopic pour le fichier Tours
+   val tours = "C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\tours.csv"
    val fileTours = new File(tours)
    val linesTours: Iterator[String] = Source.fromFile(fileTours).getLines()
    //linesTours.foreach(println)
    val DataTours = linesTours.mkString
 
-   //Ecriture pour le fichier Cartographie
-   val carto = "C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\tours.csv"
+   //Intopic pour le fichier Cartographie
+   val carto = "C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\cartographie.csv"
    val fileCarto = new File(carto)
    val linesCarto: Iterator[String] = Source.fromFile(fileCarto).getLines()
    //linesCarto.foreach(println)
-   val DataCarto = linesCarto.mkString
+   val DataCarto = linesCarto.mkString(";")
 
-   //Ecriture pour le fichier Societe
+   //InTopic pour le fichier Societe
    val societe = "C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\societe.txt"
    val fileSociete = new File(societe)
    val linesSociete: Iterator[String] = Source.fromFile(fileSociete).getLines()
-   linesSociete.foreach(println)
-   //val DataSociete = linesSociete.mkString
+   //linesSociete.foreach(println)
+   val DataSociete = linesSociete.mkString
 
 
 
@@ -56,8 +50,8 @@ object Producer extends App {
    producerProperties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
 
    val kafkaProducer = new KafkaProducer[String,String](producerProperties)
-   val producerRecordPays = new ProducerRecord[String,String]("testScala",DataPays )
-   val producerRecordCarto = new ProducerRecord[String,String]("testScala",DataCarto )
+   val producerRecordPays = new ProducerRecord[String,String]("pays",DataPays )
+   val producerRecordCarto = new ProducerRecord[String,String]("carto",DataCarto )
    val producerRecordTours = new ProducerRecord[String,String]("testScala",DataTours )
 
    kafkaProducer.send(producerRecordPays)
@@ -66,6 +60,25 @@ object Producer extends App {
     //print(producerRecord)
    kafkaProducer.flush()
    kafkaProducer.close()
+
+   val spark = SparkSession
+     .builder()
+     .master("local")
+     .appName("load_data")
+     .getOrCreate()
+
+   //val DFpays = spark.read.option("hearder", true).option("inferSchema", true).format("csv").load("C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\pays.csv")
+import spark.implicits._
+   val cartoDF = spark
+     .read
+     .format("kafka")
+     .option("kafka.bootstrap.servers", "127.0.0.1:9092")
+     .option("subscribe", "pays")
+     .option("includeHeaders","true")
+     .load()
+   cartoDF.selectExpr("CAST(key AS STRING)","CAST(value AS STRING)", "headers")
+     .as[(String, String, Array[(String, Array[Byte])])]
+   cartoDF.write.parquet("hdfs://localhost:9000/DataCarto.parquet")
 
 
 }
