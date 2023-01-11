@@ -13,3 +13,12 @@ libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.1.2"
 libraryDependencies += "org.apache.spark" %% "spark-sql-kafka-0-10" % "3.1.2"
 libraryDependencies += "org.apache.spark" %% "spark-streaming" % "3.1.2" %"provided"
 libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-10" % "3.1.2"
+libraryDependencies += "org.apache.spark" %% "spark-hive" % "3.3.1"
+libraryDependencies += "org.apache.derby" % "derby" % "10.12.1.1"
+libraryDependencies += "org.apache.derby" % "derbyclient" % "10.12.1.1"
+
+
+
+
+
+

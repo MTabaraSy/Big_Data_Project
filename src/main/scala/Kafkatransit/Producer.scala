@@ -1,12 +1,9 @@
 package scala
 
-import javafx.scene.control.Tab
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
 import org.apache.spark
-import org.apache.spark.sql.SparkSession
 
-import org.apache.spark.sql.catalyst.dsl.expressions.{DslExpression, StringToAttributeConversionHelper}
 
 import java.io.File
 import java.util.Properties
@@ -14,6 +11,7 @@ import scala.io.Source
 
 object Producer extends App {
 
+// Début___Récupération des fichiers du systemLocal et enregistrement sous forme de String value
    //InTopic pour le fichier Pays
    val pays = "C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\pays.csv"
    val filePays = new File(pays)
@@ -42,7 +40,9 @@ object Producer extends App {
    //linesSociete.foreach(println)
    val DataSociete = linesSociete.mkString
 
+   //FIN___Récupération des fichiers du systemLocal et enregistrement sous forme de String value
 
+   //DEBUT___Saving Data in Kafka' Topics
 
    val producerProperties = new Properties()
    producerProperties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"127.0.0.1:9092")
@@ -52,33 +52,20 @@ object Producer extends App {
    val kafkaProducer = new KafkaProducer[String,String](producerProperties)
    val producerRecordPays = new ProducerRecord[String,String]("pays",DataPays )
    val producerRecordCarto = new ProducerRecord[String,String]("carto",DataCarto )
-   val producerRecordTours = new ProducerRecord[String,String]("testScala",DataTours )
+   val producerRecordTours = new ProducerRecord[String,String]("tours",DataTours )
+   val producerRecordSociete = new ProducerRecord[String,String]("societe",DataSociete)
 
    kafkaProducer.send(producerRecordPays)
    kafkaProducer.send(producerRecordCarto)
    kafkaProducer.send(producerRecordTours)
+   kafkaProducer.send(producerRecordSociete)
     //print(producerRecord)
    kafkaProducer.flush()
    kafkaProducer.close()
+   //FIN___Saving Data in Kafka' Topics
 
-   val spark = SparkSession
-     .builder()
-     .master("local")
-     .appName("load_data")
-     .getOrCreate()
 
-   //val DFpays = spark.read.option("hearder", true).option("inferSchema", true).format("csv").load("C:\\Users\\TeiTei\\Documents\\M2BI-2022\\Big_Data\\Projet BG\\datasets\\pays.csv")
-import spark.implicits._
-   val cartoDF = spark
-     .read
-     .format("kafka")
-     .option("kafka.bootstrap.servers", "127.0.0.1:9092")
-     .option("subscribe", "pays")
-     .option("includeHeaders","true")
-     .load()
-   cartoDF.selectExpr("CAST(key AS STRING)","CAST(value AS STRING)", "headers")
-     .as[(String, String, Array[(String, Array[Byte])])]
-   cartoDF.write.parquet("hdfs://localhost:9000/DataCarto.parquet")
+
 
 
 }
