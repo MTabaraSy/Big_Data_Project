@@ -16,6 +16,12 @@ libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka-0-10" % "3.1
 libraryDependencies += "org.apache.spark" %% "spark-hive" % "3.3.1"
 libraryDependencies += "org.apache.derby" % "derby" % "10.12.1.1"
 libraryDependencies += "org.apache.derby" % "derbyclient" % "10.12.1.1"
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "3.3.4"
+libraryDependencies += "org.apache.hive" % "hive-jdbc" % "3.1.3"
+libraryDependencies += "org.apache.hive" % "hive-metastore" % "3.1.3"
+
+
+
 
 
 
